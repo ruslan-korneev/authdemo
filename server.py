@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Form
+from typing import Optional
+
+from fastapi import FastAPI, Form, Cookie
 from fastapi.responses import Response
 
 app = FastAPI()
@@ -18,10 +20,13 @@ users = {
 
 
 @app.get("/")
-def index_page():
+def index_page(username: Optional[str] = Cookie(default=None)):
     with open("templates/index.html", 'r') as f:
         login_page = f.read()
-    return Response(login_page, media_type="text/html")
+    if username:
+        return Response(f"Привеет, {users[username]['name']}!", media_type='text/html')
+    else:
+        return Response(login_page, media_type="text/html")
 
 @app.post("/login")
 def login_page(username : str = Form(...), password : str = Form(...)):
@@ -30,6 +35,8 @@ def login_page(username : str = Form(...), password : str = Form(...)):
     if not user or user['password'] != password:
         return Response("Я вас не знаю!", media_type="text/html")
     else:
-        return Response(
+        response = Response(
             f"Привееет, {user['name']}!<br>Баланс: {user['balance']}",
             media_type="text/html")
+        response.set_cookie(key="username", value=username)
+        return response
