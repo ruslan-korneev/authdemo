@@ -24,6 +24,13 @@ def index_page(username: Optional[str] = Cookie(default=None)):
     with open("templates/index.html", 'r') as f:
         login_page = f.read()
     if username:
+        try:
+            user = users[username]
+        except KeyError:
+            response = Response(login_page, media_type='text/html')
+            response.delete_cookie(key='username')
+            return response
+
         return Response(f"Привеет, {users[username]['name']}!", media_type='text/html')
     else:
         return Response(login_page, media_type="text/html")
